@@ -15,13 +15,12 @@ websocket_init(_TransportName, Req, _Opts) ->
     {ok, Req, undefined}.
 
 websocket_handle({text, Payload}, Req, State) ->
-    {[Type|Event], <<>>} = tnetstring:decode(Payload),
-    Event2 = list_to_tuple(Event),
-    handle(Type, Event2, State),
+    {Type, Event} = holobase_events:decode(Payload),
+    handle(Type, Event, State),
     {ok, Req, State}.
 
 websocket_info({op, {Document, Version, Op}}, Req, State) ->
-    Payload = tnetstring:encode([<<"op">>, Document, Version, Op]),
+    Payload = holobase_events:encode_op(Document, Version, Op),
     {reply, {text, Payload}, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->
