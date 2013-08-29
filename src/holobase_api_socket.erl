@@ -27,6 +27,6 @@ websocket_terminate(_Reason, _Req, _State) ->
     ok.
 
 handle(<<"op">>, {_Document, Version, Op}, _State) ->
-    Doc = whereis(document),
+    Doc = holobase_document:find(<<"wip">>),
     holobase_document:apply(Doc, Version, Op).
 

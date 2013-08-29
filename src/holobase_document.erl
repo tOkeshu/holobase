@@ -1,12 +1,12 @@
 -module(holobase_document).
 -behaviour(gen_server).
 
--export([open/1, apply/3]).
+-export([open/1, find/1, apply/3]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
 
 open(_Name) ->
-    case whereis(document) of
+    case find(document) of
         undefined ->
             {ok, Doc} = gen_server:start(?MODULE, [], []),
             register(document, Doc),
@@ -16,6 +16,9 @@ open(_Name) ->
             subscribe(Pid, self()),
             {ok, Pid}
     end.
+
+find(_Name) ->
+    whereis(document).
 
 subscribe(Doc, Subscriber) ->
     gen_server:cast(Doc, {subscribe, Subscriber}).
