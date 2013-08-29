@@ -1,0 +1,7 @@
+{application, holobase, [
+    {description, "Real-time collaboration backend"},
+    {vsn, "0.0.1"},
+    {modules, []},
+    {mod, {holobase, []}},
+    {applications, [kernel, stdlib, cowboy]}
+]}.
