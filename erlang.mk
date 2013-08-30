@@ -165,34 +165,34 @@ clean-docs:
 
 # Tests.
 
-$(foreach dep,$(TEST_DEPS),$(eval $(call dep_target,$(dep))))
+# $(foreach dep,$(TEST_DEPS),$(eval $(call dep_target,$(dep))))
 
-build-test-deps: $(ALL_TEST_DEPS_DIRS)
-	@for dep in $(ALL_TEST_DEPS_DIRS) ; do $(MAKE) -C $$dep; done
+# build-test-deps: $(ALL_TEST_DEPS_DIRS)
+# 	@for dep in $(ALL_TEST_DEPS_DIRS) ; do $(MAKE) -C $$dep; done
 
-build-tests: build-test-deps
-	$(gen_verbose) erlc -v $(ERLC_OPTS) -o test/ \
+build-tests:
+	$(gen_verbose) erlc -v $(ERLC_OPTS) -o ebin/ \
 		$(wildcard test/*.erl test/*/*.erl) -pa ebin/
 
-CT_RUN = ct_run \
-	-no_auto_compile \
-	-noshell \
-	-pa $(realpath ebin) $(DEPS_DIR)/*/ebin \
-	-dir test \
-	-logdir logs
-#	-cover test/cover.spec
+# CT_RUN = ct_run \
+# 	-no_auto_compile \
+# 	-noshell \
+# 	-pa $(realpath ebin) $(DEPS_DIR)/*/ebin \
+# 	-dir test \
+# 	-logdir logs
+# #	-cover test/cover.spec
 
-CT_SUITES ?=
-CT_SUITES_FULL = $(addsuffix _SUITE,$(CT_SUITES))
+# CT_SUITES ?=
+# CT_SUITES_FULL = $(addsuffix _SUITE,$(CT_SUITES))
 
-tests: ERLC_OPTS += -DTEST=1 +'{parse_transform, eunit_autoexport}'
-tests: clean deps app build-tests
-	@if [ -d "test" ] ; \
-	then \
-		mkdir -p logs/ ; \
-		$(CT_RUN) -suite $(CT_SUITES_FULL) ; \
-	fi
-	$(gen_verbose) rm -f test/*.beam
+# tests: ERLC_OPTS += -DTEST=1 +'{parse_transform, eunit_autoexport}'
+# tests: clean deps app build-tests
+# 	@if [ -d "test" ] ; \
+# 	then \
+# 		mkdir -p logs/ ; \
+# 		$(CT_RUN) -suite $(CT_SUITES_FULL) ; \
+# 	fi
+# 	$(gen_verbose) rm -f test/*.beam
 
 # Dialyzer.
 
