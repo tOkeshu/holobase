@@ -1,17 +1,17 @@
 -module(holobase_queue).
 
--export([tr_queue/2, push/3]).
+-export([tr_queue/3, push/4]).
 
-tr_queue([], _Version) ->
+tr_queue([], _Version, _Hash) ->
     [];
-tr_queue([{Version, _Op}|_Tail] = Queue, Version) ->
-    [Op || {_Version, Op} <- Queue];
-tr_queue([{_Version, _Op}|Queue], Version) ->
-    tr_queue(Queue, Version).
+tr_queue([{Version, _Op, _Hash}|_Tail] = Queue, Version, Hash) ->
+    [Op || {_Version, Op, H} <- Queue, H =/= Hash];
+tr_queue([{_Version, _Op, _Hash}|Queue], Version, Hash) ->
+    tr_queue(Queue, Version, Hash).
 
-push(Queue, Op, Version) when length(Queue) =:= 10 ->
+push(Queue, Op, Version, Hash) when length(Queue) =:= 10 ->
     [_Out|Queue2] = Queue,
-    push(Queue2, Op, Version);
-push(Queue, Op, Version) ->
-    lists:reverse([{Version, Op}|lists:reverse(Queue)]).
+    push(Queue2, Op, Version, Hash);
+push(Queue, Op, Version, Hash) ->
+    lists:reverse([{Version, Op, Hash}|lists:reverse(Queue)]).
 
