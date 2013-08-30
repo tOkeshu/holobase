@@ -1,7 +1,7 @@
 -module(holobase_document).
 -behaviour(gen_server).
 
--export([open/1, find/1, apply/3]).
+-export([open/1, find/1, apply/4]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
          code_change/3]).
 
@@ -23,8 +23,8 @@ find(_Name) ->
 subscribe(Doc, Subscriber) ->
     gen_server:cast(Doc, {subscribe, Subscriber}).
 
-apply(Doc, Version, Op) ->
-    gen_server:cast(Doc, {apply, Version, Op}).
+apply(Doc, Version, Op, Hash) ->
+    gen_server:cast(Doc, {apply, Version, Op, Hash}).
 
 init(_Name) ->
     {ok, {[], [], {0, [{<<"x">>, <<"">>}]}}}.
@@ -34,11 +34,11 @@ handle_call(_Msg, _From, State) ->
 
 handle_cast({subscribe, Subscriber}, {Subscribers, _Queue, {V, Document}}) ->
     {noreply, {[Subscriber|Subscribers], _Queue, {V, Document}}};
-handle_cast({apply, Version, Op}, {Subscribers, Queue, {V, Document}}) ->
-    TrQueue     = holobase_queue:tr_queue(Queue, Version),
+handle_cast({apply, Version, Op, Hash}, {Subscribers, Queue, {V, Document}}) ->
+    TrQueue     = holobase_queue:tr_queue(Queue, Version, Hash),
     TrOp        = ot:transform(Op, TrQueue),
     NewDocument = ot:apply(Document, TrOp),
-    NewQueue    = holobase_queue:push(Queue, TrOp, V),
+    NewQueue    = holobase_queue:push(Queue, TrOp, V, Hash),
 
     Event = {<<"wip">>, V, Op},
     [Subscriber ! {op, Event} || Subscriber <- Subscribers],

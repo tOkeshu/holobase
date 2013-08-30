@@ -12,7 +12,7 @@ init({tcp, http}, _Req, _Opts) ->
 
 websocket_init(_TransportName, Req, _Opts) ->
     {ok, _Doc} = holobase_document:open("wip"),
-    {ok, Req, undefined}.
+    {ok, Req, token(10)}.
 
 websocket_handle({text, Payload}, Req, State) ->
     {Type, Event} = holobase_events:decode(Payload),
@@ -26,7 +26,12 @@ websocket_info({op, {Document, Version, Op}}, Req, State) ->
 websocket_terminate(_Reason, _Req, _State) ->
     ok.
 
-handle(<<"op">>, {_Document, Version, Op}, _State) ->
+handle(<<"op">>, {_Document, Version, Op}, Hash) ->
     Doc = holobase_document:find(<<"wip">>),
-    holobase_document:apply(Doc, Version, Op).
+    holobase_document:apply(Doc, Version, Op, Hash).
+
+token(N) ->
+    Token = [io_lib:format("~2.16.0b",[Byte])
+             || <<Byte>> <= crypto:strong_rand_bytes(N)],
+    iolist_to_binary(Token).
 
