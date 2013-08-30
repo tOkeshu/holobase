@@ -27,17 +27,23 @@ apply(Doc, Version, Op) ->
     gen_server:cast(Doc, {apply, Version, Op}).
 
 init(_Name) ->
-    {ok, []}.
+    {ok, {[], [], {0, [{<<"x">>, <<"">>}]}}}.
 
 handle_call(_Msg, _From, State) ->
     {reply, ok, State}.
 
-handle_cast({subscribe, Subscriber}, Subscribers) ->
-    {noreply, [Subscriber|Subscribers]};
-handle_cast({apply, Version, Op}, Subscribers) ->
-    Event = {<<"wip">>, Version, Op},
+handle_cast({subscribe, Subscriber}, {Subscribers, _Queue, {V, Document}}) ->
+    {noreply, {[Subscriber|Subscribers], _Queue, {V, Document}}};
+handle_cast({apply, Version, Op}, {Subscribers, Queue, {V, Document}}) ->
+    TrQueue     = holobase_queue:tr_queue(Queue, Version),
+    TrOp        = ot:transform(Op, TrQueue),
+    NewDocument = ot:apply(Document, TrOp),
+    NewQueue    = holobase_queue:push(Queue, TrOp, V),
+
+    Event = {<<"wip">>, V, Op},
     [Subscriber ! {op, Event} || Subscriber <- Subscribers],
-    {noreply, Subscribers}.
+
+    {noreply, {Subscribers, NewQueue, {V + 1, NewDocument}}}.
 
 handle_info(Msg, State) ->
     io:format("Unexpected message: ~p~n",[Msg]),
